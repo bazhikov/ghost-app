@@ -10,8 +10,6 @@ terraform {
 }
 provider "aws" {
   region = var.aws_region
-  shared_credentials_files = [ "~/.aws/credentials" ]
-  profile = "Terraform"
   default_tags {
     tags = {
       "Project" = "CloudX"

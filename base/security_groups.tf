@@ -39,13 +39,13 @@ resource "aws_security_group" "ec2_pool" {
         protocol    = "tcp"
         cidr_blocks = [var.vpc_cidr]
     }
-    ingress {
-        description = "App port from ALB"
-        from_port   = 2368
-        to_port     = 2368
-        protocol    = "tcp"
-        security_groups = [aws_security_group.alb.id]
-    }
+    # ingress {
+    #     description = "App port from ALB"
+    #     from_port   = 2368
+    #     to_port     = 2368
+    #     protocol    = "tcp"
+    #     security_groups = [aws_security_group.alb.id]
+    # }
     egress {
         description = "Allow all outbound"
         from_port   = 0
@@ -70,16 +70,36 @@ resource "aws_security_group" "alb" {
         protocol    = "tcp"
         cidr_blocks = [var.my_ip]
     }
-    egress {
-        description = "Allow all outbound"
-        from_port   = 0
-        to_port     = 0
-        protocol    = "-1"
-        cidr_blocks = [aws_security_group.ec2_pool.id]
-    }
+    # egress {
+    #     description = "Allow all outbound"
+    #     from_port   = 0
+    #     to_port     = 0
+    #     protocol    = "-1"
+    #     cidr_blocks = [aws_security_group.ec2_pool.id]
+    # }
     tags = {
         Name = "alb-sg"
     }
+}
+
+resource "aws_security_group_rule" "alb_to_ec2" {
+    type              = "ingress"
+    from_port         = 2368
+    to_port           = 2368
+    protocol          = "tcp"
+    security_group_id = aws_security_group.ec2_pool.id
+    source_security_group_id = aws_security_group.alb.id
+    description       = "Allow ALB to EC2 instances on port 2368"
+}
+
+resource "aws_security_group_rule" "ec2_to_alb" {
+    type              = "egress"
+    from_port         = 0
+    to_port           = 0
+    protocol          = "-1"
+    security_group_id = aws_security_group.alb.id
+    source_security_group_id = aws_security_group.ec2_pool.id
+    description       = "Allow EC2 instances to ALB"
 }
 
 resource "aws_security_group" "efs" {
