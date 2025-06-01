@@ -37,4 +37,10 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
+resource "aws_route_table_association" "cloudx_public_assoc" {
+  count          = length(aws_subnet.subnet_cloudx)
+  subnet_id      = aws_subnet.subnet_cloudx[count.index].id   
+  route_table_id = aws_route_table.public_rt.id              
+}
+
 

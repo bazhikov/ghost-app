@@ -9,6 +9,14 @@ resource "aws_security_group" "bastion_sg" {
         protocol    = "tcp"
         cidr_blocks = [var.my_ip]
     }
+    ingress {
+        description      = "Allow ICMP Echo (ping)"
+        from_port        = -1
+        to_port          = -1
+        protocol         = "icmp"
+        cidr_blocks      = [var.my_ip]
+        ipv6_cidr_blocks = []
+  }
     egress {
         from_port   = 0
         to_port     = 0
