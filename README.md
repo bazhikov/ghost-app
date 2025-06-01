@@ -1,2 +1,3 @@
 # ghost-app
-lab task for creating with complete infrastructure on AWS and deploying the application 
+lab task for creating ghost application with complete infrastructure on AWS and deploying the application 
+
