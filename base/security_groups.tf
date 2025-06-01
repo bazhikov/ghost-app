@@ -112,7 +112,7 @@ resource "aws_security_group" "efs" {
         from_port   = 2049
         to_port     = 2049
         protocol    = "tcp"
-        cidr_blocks = [aws_security_group.ec2_pool.id]
+        security_groups = [aws_security_group.ec2_pool.id]
     }
     egress {
         description = "Allow all outbound"

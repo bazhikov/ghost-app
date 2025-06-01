@@ -37,3 +37,9 @@ variable "my_ip" {
   type        = string
 #   command to use: terraform apply -var="my_ip=$(curl -4 -s ifconfig.me)/32"
 }
+
+variable "key_name" {
+  description = "Name of the SSH key pair to use for EC2 instances"
+  type        = string
+  default     = "ghost-ec2-pool"
+}
