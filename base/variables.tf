@@ -24,10 +24,10 @@ variable "public_subnets" {
     {
       cidr_block = "10.10.2.0/24"
       az         = "b"
-    },  
+    },
     {
       cidr_block = "10.10.3.0/24"
-      az         = "c" 
+      az         = "c"
     }
   ]
 }
@@ -35,7 +35,7 @@ variable "public_subnets" {
 variable "my_ip" {
   description = "Your public IP address with CIDR suffix"
   type        = string
-#   command to use: terraform apply -var="my_ip=$(curl -4 -s ifconfig.me)/32"
+  #   command to use: terraform apply -var="my_ip=$(curl -4 -s ifconfig.me)/32"
 }
 
 variable "key_name" {

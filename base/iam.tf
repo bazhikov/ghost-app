@@ -13,11 +13,11 @@ resource "aws_iam_role" "ghost_app" {
     ]
   })
 }
-  
+
 resource "aws_iam_policy" "ghost_app_policy" {
   name        = "ghost_app_policy"
   description = "Allow EC2 and EFS permissions for Ghost app"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

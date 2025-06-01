@@ -1,7 +1,7 @@
 resource "aws_vpc" "cloudx" {
-  cidr_block = var.vpc_cidr
-  instance_tenancy = "default"
-  enable_dns_support = true
+  cidr_block           = var.vpc_cidr
+  instance_tenancy     = "default"
+  enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
     Name = "cloudx-vpc"
@@ -32,9 +32,9 @@ resource "aws_route_table" "public_rt" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.cloudx-igw.id
   }
-    tags = {
-        Name = "cloudx-public-rt"
-    }
+  tags = {
+    Name = "cloudx-public-rt"
+  }
 }
 
 

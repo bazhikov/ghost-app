@@ -5,7 +5,7 @@ resource "aws_lb" "cloudx_alb" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.subnet_cloudx[*].id
 
-#   enable_deletion_protection = false
+  #   enable_deletion_protection = false
 
   tags = {
     Name = "cloudx-alb"
@@ -30,7 +30,7 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
 
   tags = {
     Name = "ghost-ec2-tg"
-  } 
+  }
 }
 
 resource "aws_lb_listener" "http" {
