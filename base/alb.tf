@@ -1,5 +1,5 @@
 resource "aws_lb" "cloudx_alb" {
-  name               = "cloudx-alb"
+  name               = var.alb_name
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -8,7 +8,7 @@ resource "aws_lb" "cloudx_alb" {
   #   enable_deletion_protection = false
 
   tags = {
-    Name = "cloudx-alb"
+    Name = var.alb_name
   }
 }
 

@@ -43,3 +43,9 @@ variable "key_name" {
   type        = string
   default     = "ghost-ec2-pool"
 }
+
+variable "alb_name" {
+  description = "The name to give the ALB (and the name the launch template will look up)."
+  type        = string
+  default     = "cloudx-alb"
+}

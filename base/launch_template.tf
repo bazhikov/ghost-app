@@ -1,6 +1,6 @@
-data "aws_lb" "cloudx_alb" {
-  name = "cloudx-alb" # replace with your actual ALB name if different
-}
+# data "aws_lb" "cloudx_alb" {
+#   name = var.alb_name
+# }
 
 resource "aws_launch_template" "ghost" {
   name_prefix   = "ghost-"
@@ -15,7 +15,7 @@ resource "aws_launch_template" "ghost" {
   vpc_security_group_ids = [aws_security_group.ec2_pool.id]
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    LB_DNS_NAME = data.aws_lb.cloudx_alb.dns_name
+    LB_DNS_NAME = aws_lb.cloudx_alb.dns_name
   }))
 
   lifecycle {
