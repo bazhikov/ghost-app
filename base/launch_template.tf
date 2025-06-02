@@ -4,7 +4,7 @@
 
 resource "aws_launch_template" "ghost" {
   name_prefix   = "ghost-"
-  image_id      = data.aws_ami.amazon_linux.id
+  image_id      = data.aws_ami.amazon_linux_2023.id
   instance_type = "t2.micro"
   key_name      = var.key_name
 
@@ -18,18 +18,24 @@ resource "aws_launch_template" "ghost" {
     LB_DNS_NAME = aws_lb.cloudx_alb.dns_name
   }))
 
+    metadata_options {
+        http_tokens               = "optional"
+        http_put_response_hop_limit = 1
+        http_endpoint             = "enabled"
+    }
+
   lifecycle {
     create_before_destroy = true
   }
 }
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["amzn2023-ami-*-x86_64*"]
   }
 
   filter {

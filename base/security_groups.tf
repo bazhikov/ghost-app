@@ -69,7 +69,7 @@ resource "aws_security_group" "alb" {
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
-        cidr_blocks = [var.my_ip]
+        cidr_blocks = ["0.0.0.0/0"] // [var.my_ip]
     }
     tags = {
         Name = "alb-sg"

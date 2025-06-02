@@ -1,30 +1,61 @@
 #!/bin/bash -xe
 
-exec > >(tee /var/log/cloud-init-output.log|logger -t user-data -s 2>/dev/console) 2>&1
-### Update this to match your ALB DNS name
+exec > >(tee /var/log/cloud-init-output.log | logger -t user-data -s 2>/dev/console) 2>&1
+
+# 1) ALB DNS name injected via Terraform
 LB_DNS_NAME='${LB_DNS_NAME}'
 
-### Install EFS utils and Ghost
+# 2) Query IMDSv1 for availability‐zone → strip the last letter to get region
 REGION=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//')
 EFS_ID=$(aws efs describe-file-systems --query 'FileSystems[?Name==`ghost_content`].FileSystemId' --region $REGION --output text)
+echo "EFS_ID: $EFS_ID"
+echo "REGION: $REGION"
 
-### Install pre-reqs
-curl -sL https://rpm.nodesource.com/setup_14.x | sudo bash -
-yum install -y nodejs amazon-efs-utils
-npm install ghost-cli@latest -g
+# 3) Install Node.js 18.x
+echo "Installing Node.js..."
+curl -sL https://rpm.nodesource.com/setup_18.x | sudo bash -
+sudo yum install -y nodejs
 
-adduser ghost_user
-usermod -aG wheel ghost_user
-cd /home/ghost_user/
+# 4) Install EFS utils and Ghost-CLI
+echo "Installing amazon-efs-utils and ghost-cli..."
+sudo yum install -y amazon-efs-utils
+sudo npm install -g ghost-cli@latest
 
-sudo -u ghost_user ghost install [4.12.1] local
+# 5) Create ghost_user if it doesn’t exist
+if ! id "ghost_user" &>/dev/null; then
+    echo "Adding user ghost_user"
+    sudo adduser ghost_user
+    sudo usermod -aG wheel ghost_user
+else
+    echo "User ghost_user already exists. Skipping user creation."
+fi
 
-### EFS mount
-mkdir -p /home/ghost_user/ghost/content/data
-mount -t efs -o tls $EFS_ID:/ /home/ghost_user/ghost/content
+# 6) Create /home/ghost_user/ghost directory and set ownership
+if [ ! -d "/home/ghost_user/ghost" ]; then
+    echo "Creating ghost folder"
+    sudo mkdir -p /home/ghost_user/ghost
+    sudo chown -R ghost_user:ghost_user /home/ghost_user/ghost
+else
+    echo "Folder already exists. Skipping ghost folder creation."
+fi
 
-cat << EOF > config.development.json
+# 7) Switch to ghost_user to install Ghost 5 in local mode
+echo "Installing ghost..."
+sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --version 5 local --no-setup-nginx --no-setup-ssl --no-prompt"
 
+# 8) Mount EFS to Ghost content directory
+echo "Mounting EFS..."
+echo "EFS_ID: $EFS_ID"
+sudo mkdir -p /home/ghost_user/ghost/content/data
+sudo mount -t efs -o tls $EFS_ID:/ /home/ghost_user/ghost/content
+
+echo "Adjusting permissions..."
+sudo chown -R ghost_user:ghost_user /home/ghost_user/ghost/content
+sudo chmod -R u+rwX /home/ghost_user/ghost/content
+
+# 9) Create Ghost config with ALB URL, listening on 2368
+echo "Creating config.development.json"
+cat << EOF > /home/ghost_user/ghost/config.development.json
 {
   "url": "http://${LB_DNS_NAME}",
   "server": {
@@ -41,10 +72,7 @@ cat << EOF > config.development.json
     "transport": "Direct"
   },
   "logging": {
-    "transports": [
-      "file",
-      "stdout"
-    ]
+    "transports": ["file","stdout"]
   },
   "process": "local",
   "paths": {
@@ -53,5 +81,14 @@ cat << EOF > config.development.json
 }
 EOF
 
-sudo -u ghost_user ghost stop
-sudo -u ghost_user ghost start
+sudo chown ghost_user:ghost_user /home/ghost_user/ghost/config.development.json
+sudo chmod 600 /home/ghost_user/ghost/config.development.json
+
+# 10) Stop (in case it auto-started) and then start Ghost under ghost_user
+echo "Stopping Ghost (if running)…"
+sudo -u ghost_user bash -c "cd /home/ghost_user/ghost && ghost stop || true"
+
+echo "Starting Ghost…"
+sudo -u ghost_user bash -c "cd /home/ghost_user/ghost && ghost start"
+
+echo "Done! User-data script complete."
