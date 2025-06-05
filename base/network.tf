@@ -13,6 +13,9 @@ resource "aws_subnet" "subnet_cloudx" {
   vpc_id            = aws_vpc.cloudx.id
   cidr_block        = var.public_subnets[count.index]["cidr_block"]
   availability_zone = "${var.aws_region}${var.public_subnets[count.index]["az"]}"
+
+  map_public_ip_on_launch = true
+  
   tags = {
     Name = "cloudx-subnet-${var.public_subnets[count.index]["az"]}"
   }

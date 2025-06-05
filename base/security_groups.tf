@@ -96,6 +96,16 @@ resource "aws_security_group_rule" "ec2_to_alb" {
     description       = "Allow EC2 instances to ALB"
 }
 
+resource "aws_security_group_rule" "icmp_from_bastion" {
+  type                     = "ingress"
+  from_port                = -1       # ICMP “all types”
+  to_port                  = -1
+  protocol                 = "icmp"
+  security_group_id        = aws_security_group.ec2_pool.id
+  source_security_group_id = aws_security_group.bastion_sg.id
+  description              = "Allow ICMP (ping) from Bastion"
+}
+
 resource "aws_security_group" "efs" {
     name        = "efs"
     description = "defines access to efs mount points"

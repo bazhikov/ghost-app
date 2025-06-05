@@ -5,7 +5,7 @@ resource "aws_lb" "cloudx_alb" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.subnet_cloudx[*].id
 
-  #   enable_deletion_protection = false
+  enable_deletion_protection = false
 
   tags = {
     Name = var.alb_name
@@ -19,13 +19,13 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
   vpc_id   = aws_vpc.cloudx.id
 
   health_check {
-    path                = "/"
+    path                = "/ghost"
     protocol            = "HTTP"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher             = "200,301"
   }
 
   tags = {
@@ -33,7 +33,7 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
   }
 }
 
-resource "aws_lb_listener" "http" {
+resource "aws_lb_listener" "ghost_listener" {
   load_balancer_arn = aws_lb.cloudx_alb.arn
   port              = 80
   protocol          = "HTTP"

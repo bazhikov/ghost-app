@@ -1,5 +1,5 @@
 resource "aws_instance" "bastion" {
-  ami           = data.aws_ami.amazon_linux.id
+  ami           = data.aws_ami.amazon_linux_2023.id
   instance_type = "t2.micro"
   key_name      = var.key_name
   associate_public_ip_address = true

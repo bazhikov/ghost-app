@@ -8,6 +8,19 @@ resource "aws_launch_template" "ghost" {
   instance_type = "t2.micro"
   key_name      = var.key_name
 
+  block_device_mappings {
+    device_name = "/dev/xvda"            # or whatever your AMI’s root device is
+    ebs {
+      volume_size = 20                   # size in GB
+      volume_type = "gp3"                # gp3 (or gp2) is fine
+      delete_on_termination = true       # auto‐cleanup
+    }
+  }
+
+#   network_interfaces {
+#     associate_public_ip_address = true
+#   }
+
   iam_instance_profile {
     name = aws_iam_instance_profile.ghost_app_profile.name
   }
@@ -15,7 +28,9 @@ resource "aws_launch_template" "ghost" {
   vpc_security_group_ids = [aws_security_group.ec2_pool.id]
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    LB_DNS_NAME = aws_lb.cloudx_alb.dns_name
+    LB_DNS_NAME = aws_lb.cloudx_alb.dns_name,
+    REGION      = var.aws_region,
+    EFS_ID      = aws_efs_file_system.ghost_content.id
   }))
 
     metadata_options {
@@ -35,7 +50,7 @@ data "aws_ami" "amazon_linux_2023" {
 
   filter {
     name   = "name"
-    values = ["amzn2023-ami-*-x86_64*"]
+    values = ["al2023-ami-*-x86_64*"]
   }
 
   filter {
