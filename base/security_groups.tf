@@ -129,3 +129,24 @@ resource "aws_security_group" "efs" {
         Name = "efs-sg"
     }
 }
+
+# Outputs
+output "bastion_sg_id" {
+  description = "The ID of the Bastion Security Group"
+  value       = aws_security_group.bastion_sg.id
+}
+
+output "ec2_pool_sg_id" {
+  description = "The ID of the EC2 Pool Security Group"
+  value       = aws_security_group.ec2_pool.id
+}
+
+output "alb_sg_id" {
+  description = "The ID of the ALB Security Group"
+  value       = aws_security_group.alb.id
+}
+
+output "efs_sg_id" {
+  description = "The ID of the EFS Security Group"
+  value       = aws_security_group.efs.id
+}

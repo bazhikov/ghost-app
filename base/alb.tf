@@ -25,7 +25,7 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher             = "200,301"
+    matcher             = "200,301,302"
   }
 
   tags = {
