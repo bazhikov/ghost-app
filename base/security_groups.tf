@@ -130,6 +130,34 @@ resource "aws_security_group" "efs" {
     }
 }
 
+# For RDS MySQL Database Security Group
+resource "aws_security_group" "mysql" {
+  name        = "mysql-sg"
+  description = "Defines access to MySQL Database"
+  vpc_id      = aws_vpc.cloudx.id
+
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "mysql-sg"
+  }
+}
+
+resource "aws_security_group_rule" "mysql_ingress_ec2_pool" {
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.mysql.id
+  source_security_group_id = aws_security_group.ec2_pool.id
+  description              = "Allow MySQL access from EC2 pool"
+}
+
 # Outputs
 output "bastion_sg_id" {
   description = "The ID of the Bastion Security Group"
@@ -149,4 +177,9 @@ output "alb_sg_id" {
 output "efs_sg_id" {
   description = "The ID of the EFS Security Group"
   value       = aws_security_group.efs.id
+}
+
+output "mysql_sg_id" {
+  description = "The ID of the MySQL Security Group"
+  value       = aws_security_group.mysql.id
 }

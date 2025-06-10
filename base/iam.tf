@@ -27,7 +27,20 @@ resource "aws_iam_policy" "ghost_app_policy" {
           "ec2:Describe*",
           "elasticfilesystem:DescribeFileSystems",
           "elasticfilesystem:ClientMount",
-          "elasticfilesystem:ClientWrite"
+          "elasticfilesystem:ClientWrite",
+          "ssm:GetParameter*",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt",
+          "rds:DescribeDBInstances",
+          "rds:DescribeDBClusters",
+          "rds:DescribeDBClusterEndpoints",
+          "rds:DescribeDBClusterParameterGroups",
+          "rds:DescribeDBClusterSnapshotAttributes",
+          "rds:DescribeEvents",
+          "rds:DescribeDBClusterSnapshots",
+          "rds:DescribeDBClusterBacktracks",
+          "rds:DescribeDBClusterBacktracks",
+          "rds:Connect"
         ]
         Resource = "*"
       }
@@ -43,4 +56,20 @@ resource "aws_iam_role_policy_attachment" "ghost_app_attach" {
 resource "aws_iam_instance_profile" "ghost_app_profile" {
   name = "ghost_app_instance_profile"
   role = aws_iam_role.ghost_app.name
+}
+
+# Outputs
+output "iam_policy_arn" {
+  description = "The ARN of the IAM policy"
+  value       = aws_iam_policy.ghost_app_policy.arn
+}
+
+output "iam_role_arn" {
+  description = "The ARN of the IAM role"
+  value       = aws_iam_role.ghost_app.arn
+}
+
+output "iam_instance_profile_arn" {
+  description = "The ARN of the IAM instance profile"
+  value       = aws_iam_instance_profile.ghost_app_profile.arn
 }

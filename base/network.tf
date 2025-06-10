@@ -46,4 +46,27 @@ resource "aws_route_table_association" "cloudx_public_assoc" {
   route_table_id = aws_route_table.public_rt.id              
 }
 
+# Below is Private Subnet Configuration
+resource "aws_subnet" "subnet_db" {
+  count             = length(var.private_subnets)
+  vpc_id            = aws_vpc.cloudx.id
+  cidr_block        = var.private_subnets[count.index]["cidr_block"]
+  availability_zone = "${var.aws_region}${var.private_subnets[count.index]["az"]}"
 
+  tags = {
+    Name = "cloudx-private-subnet-${var.private_subnets[count.index]["az"]}"
+  }
+}
+
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.cloudx.id
+
+  tags = {
+    Name = "cloudx-private-rt"
+  }
+}
+resource "aws_route_table_association" "cloudx_private_assoc" {
+  count          = length(aws_subnet.subnet_db)
+  subnet_id      = aws_subnet.subnet_db[count.index].id
+  route_table_id = aws_route_table.private_rt.id
+}

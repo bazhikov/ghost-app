@@ -5,9 +5,9 @@ resource "aws_autoscaling_group" "ghost_ec2_pool" {
         version = "$Latest"
     }
     vpc_zone_identifier = aws_subnet.subnet_cloudx[*].id
-    min_size            = 2
-    max_size            = 5
-    desired_capacity   = 2
+    min_size            = 1
+    max_size            = 3
+    desired_capacity   = 1
     target_group_arns = [aws_lb_target_group.ghost_ec2_tg.arn]
     health_check_type  = "ELB"
     health_check_grace_period = 300

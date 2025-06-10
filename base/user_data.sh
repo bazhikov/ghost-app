@@ -4,8 +4,12 @@ exec > >(tee /var/log/cloud-init-output.log |logger -t user-data -s 2>/dev/conso
 ### Update this to match your ALB DNS name
 LB_DNS_NAME='${LB_DNS_NAME}'
 
-# 2) Query IMDSv1 for availability‐zone → strip the last letter to get region
 REGION='${REGION}'
+SSM_DB_PASSWORD="/ghost/dbpassw"
+DB_PASSWORD=$(aws ssm get-parameter --name $SSM_DB_PASSWORD --query Parameter.Value --with-decryption --region $REGION --output text)
+DB_USER='${DB_USER}'
+DB_NAME='${DB_NAME}'
+DB_URL='${DB_URL}'
 EFS_ID='${EFS_ID}'
 echo "EFS_ID: $EFS_ID"
 echo "REGION: $REGION"
@@ -14,6 +18,8 @@ echo "REGION: $REGION"
 curl -sL https://rpm.nodesource.com/setup_18.x | sudo bash -
 yum install -y nodejs amazon-efs-utils
 npm install ghost-cli@latest -g
+
+
 
 if ! id "ghost_user" &>/dev/null; then
         echo "Adding user ghost_user"
@@ -31,6 +37,21 @@ if ! id "ghost_user" &>/dev/null; then
   else
       echo "Folder already exists. Skipping ghost folder creation."
   fi
+
+# # Check if the Ghost posts table exists
+# EXIST=$(mysql -h "$DB_URL" \
+#              -u "$DB_USER" -p"$DB_PASSWORD" \
+#              -D "$DB_NAME" \
+#              -sse "SELECT COUNT(*) FROM information_schema.tables
+#                    WHERE table_schema='$DB_NAME' AND table_name='posts';")
+
+# if [ "$EXIST" -eq 0 ]; then
+#   echo "Database is empty – running Ghost install with migrations"
+#   sudo -u ghost_user ghost install --version 5 local \
+#     --no-setup-nginx --no-setup-ssl --no-prompt
+# else
+#   echo "Database already initialized – skipping install/migration"
+# fi
 
 echo "Installing ghost..."
 cd /home/ghost_user/
@@ -56,9 +77,13 @@ cat << EOF > config.development.json
     "host": "0.0.0.0"
   },
   "database": {
-    "client": "sqlite3",
+    "client": "mysql",
     "connection": {
-      "filename": "/home/ghost_user/ghost/content/data/ghost-local.db"
+      "host": "${DB_URL}",
+      "port": 3306,
+      "user": "${DB_USER}",
+      "password": "$DB_PASSWORD",
+      "database": "${DB_NAME}"
     }
   },
   "mail": {
@@ -85,6 +110,7 @@ echo "Stopping Ghost..."
 sudo -u ghost_user bash -c "cd /home/ghost_user/ghost && ghost stop"
 
 sudo mv config.development.json /home/ghost_user/ghost
+sudo cat /home/ghost_user/ghost/config.development.json
 
 echo "Starting Ghost..."
 sudo -u ghost_user bash -c "cd /home/ghost_user/ghost && ghost start"

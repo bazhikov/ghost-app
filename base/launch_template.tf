@@ -31,6 +31,9 @@ resource "aws_launch_template" "ghost" {
     LB_DNS_NAME = aws_lb.cloudx_alb.dns_name,
     REGION      = var.aws_region,
     EFS_ID      = aws_efs_file_system.ghost_content.id
+    DB_URL     = aws_db_instance.ghost_db.address,
+    DB_USER     = var.db_username,
+    DB_NAME     = "ghost-db",
   }))
 
     metadata_options {
