@@ -32,6 +32,43 @@ variable "public_subnets" {
   ]
 }
 
+# Below is the configuration for private subnets for the RDS database
+variable "private_subnets" {
+  description = "List of private subnets with CIDR blocks and availability zones."
+  type = list(object({
+    cidr_block = string
+    az         = string
+  }))
+  default = [
+    {
+      cidr_block = "10.10.20.0/24"
+      az         = "a"
+    },
+    {
+      cidr_block = "10.10.21.0/24"
+      az         = "b"
+    },
+    {
+      cidr_block = "10.10.22.0/24"
+      az         = "c"
+    }
+  ]
+}
+
+# ECS private subnets used for Fargate tasks
+variable "ecs_private_subnets" {
+  description = "List of ECS private subnets with CIDR blocks and availability zones."
+  type = list(object({
+    cidr_block = string
+    az         = string
+  }))
+  default = [
+    { cidr_block = "10.10.10.0/24", az = "a" },
+    { cidr_block = "10.10.11.0/24", az = "b" },
+    { cidr_block = "10.10.12.0/24", az = "c" }
+  ]
+}
+
 variable "my_ip" {
   description = "Your public IP address with CIDR suffix"
   type        = string
@@ -54,27 +91,4 @@ variable "db_username" {
   description = "Username for the MySQL database."
   type        = string
   default     = "ghost_admin"
-}
-
-# Below is the configuration for private subnets
-variable "private_subnets" {
-  description = "List of private subnets with CIDR blocks and availability zones."
-  type = list(object({
-    cidr_block = string
-    az         = string
-  }))
-  default = [
-    {
-      cidr_block = "10.10.20.0/24"
-      az         = "a"
-    },
-    {
-      cidr_block = "10.10.21.0/24"
-      az         = "b"
-    },
-    {
-      cidr_block = "10.10.22.0/24"
-      az         = "c"
-    }
-  ]
 }

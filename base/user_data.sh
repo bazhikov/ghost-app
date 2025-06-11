@@ -56,7 +56,10 @@ if ! id "ghost_user" &>/dev/null; then
 echo "Installing ghost..."
 cd /home/ghost_user/
 # sudo -u ghost_user ghost install --version 5 local --no-setup-nginx --no-setup-ssl --no-prompt || true
-sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --version 5 local"
+
+######################
+# sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --version 5 local"
+sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --db mysql --dbhost $DB_URL --dbuser $DB_USER --dbpass $DB_PASSWORD --dbname $DB_NAME --no-prompt --no-setup-nginx --no-setup-ssl"
 
 # sudo mkdir -p /home/ghost_user/ghost/content/data
 # sudo chown -R ghost_user:ghost_user /home/ghost_user/ghost/content

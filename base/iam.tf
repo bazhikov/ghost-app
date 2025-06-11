@@ -73,3 +73,53 @@ output "iam_instance_profile_arn" {
   description = "The ARN of the IAM instance profile"
   value       = aws_iam_instance_profile.ghost_app_profile.arn
 }
+
+# IAM role for ECS tasks
+resource "aws_iam_role" "ghost_ecs" {
+  name = "ghost_ecs"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "ghost_ecs_policy" {
+  name = "ghost_ecs_policy"
+  role = aws_iam_role.ghost_ecs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "elasticfilesystem:DescribeFileSystems",
+        "elasticfilesystem:ClientMount",
+        "elasticfilesystem:ClientWrite"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_instance_profile" "ghost_ecs" {
+  name = "ghost_ecs"
+  role = aws_iam_role.ghost_ecs.name
+}
+
+output "ecs_role_arn" {
+  description = "ARN of ECS task role"
+  value       = aws_iam_role.ghost_ecs.arn
+}
+
+output "ecs_instance_profile_arn" {
+  description = "ARN of ECS instance profile"
+  value       = aws_iam_instance_profile.ghost_ecs.arn
+}

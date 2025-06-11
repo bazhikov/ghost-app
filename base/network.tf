@@ -15,7 +15,7 @@ resource "aws_subnet" "subnet_cloudx" {
   availability_zone = "${var.aws_region}${var.public_subnets[count.index]["az"]}"
 
   map_public_ip_on_launch = true
-  
+
   tags = {
     Name = "cloudx-subnet-${var.public_subnets[count.index]["az"]}"
   }
@@ -42,8 +42,8 @@ resource "aws_route_table" "public_rt" {
 
 resource "aws_route_table_association" "cloudx_public_assoc" {
   count          = length(aws_subnet.subnet_cloudx)
-  subnet_id      = aws_subnet.subnet_cloudx[count.index].id   
-  route_table_id = aws_route_table.public_rt.id              
+  subnet_id      = aws_subnet.subnet_cloudx[count.index].id
+  route_table_id = aws_route_table.public_rt.id
 }
 
 # Below is Private Subnet Configuration
@@ -68,5 +68,23 @@ resource "aws_route_table" "private_rt" {
 resource "aws_route_table_association" "cloudx_private_assoc" {
   count          = length(aws_subnet.subnet_db)
   subnet_id      = aws_subnet.subnet_db[count.index].id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+# ECS private subnets for Fargate tasks
+resource "aws_subnet" "subnet_ecs" {
+  count             = length(var.ecs_private_subnets)
+  vpc_id            = aws_vpc.cloudx.id
+  cidr_block        = var.ecs_private_subnets[count.index]["cidr_block"]
+  availability_zone = "${var.aws_region}${var.ecs_private_subnets[count.index]["az"]}"
+
+  tags = {
+    Name = "ecs-private-${var.ecs_private_subnets[count.index]["az"]}"
+  }
+}
+
+resource "aws_route_table_association" "ecs_private_assoc" {
+  count          = length(aws_subnet.subnet_ecs)
+  subnet_id      = aws_subnet.subnet_ecs[count.index].id
   route_table_id = aws_route_table.private_rt.id
 }
