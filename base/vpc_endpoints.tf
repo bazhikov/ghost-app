@@ -60,3 +60,8 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_endpoint_type = "Gateway"
   route_table_ids   = [aws_route_table.private_rt.id]
 }
+
+output "efs_vpc_endpoint_id" {
+  description = "ID of the VPC interface endpoint used for EFS"
+  value       = aws_vpc_endpoint.efs.id
+}
