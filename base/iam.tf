@@ -102,7 +102,10 @@ resource "aws_iam_role_policy" "ghost_ecs_policy" {
         "ecr:BatchGetImage",
         "elasticfilesystem:DescribeFileSystems",
         "elasticfilesystem:ClientMount",
-        "elasticfilesystem:ClientWrite"
+        "elasticfilesystem:ClientWrite",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:CreateLogGroup"
       ]
       Resource = "*"
     }]

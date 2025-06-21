@@ -27,6 +27,15 @@ locals {
         containerPort = 2368
         hostPort      = 2368
       }]
+      # Add logConfiguration to the container definition in locals.ghost_container_def
+      logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.ghost.name
+        awslogs-region        = var.aws_region
+        awslogs-stream-prefix = "ghost"
+      }
+    }
     }
   ])
 }
@@ -45,6 +54,13 @@ resource "aws_ecs_task_definition" "ghost" {
     name = "ghost_volume"
     efs_volume_configuration {
       file_system_id = aws_efs_file_system.ghost_content.id
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = aws_efs_access_point.ghost_ap.id
+        iam             = "ENABLED"
+      }
+      
+      root_directory  = "/"
     }
   }
 }
@@ -73,3 +89,11 @@ resource "aws_ecs_service" "ghost" {
     aws_efs_mount_target.ghost_content_targets
   ]  
 }
+
+# Define the log group
+resource "aws_cloudwatch_log_group" "ghost" {
+  name              = "/ecs/ghost"
+  retention_in_days = 7
+}
+
+

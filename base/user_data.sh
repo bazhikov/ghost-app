@@ -38,6 +38,14 @@ if ! id "ghost_user" &>/dev/null; then
       echo "Folder already exists. Skipping ghost folder creation."
   fi
 
+ # Ensure Ghost content directory exists and mount EFS
+  if [ ! -d "/home/ghost_user/ghost/content" ]; then
+      sudo mkdir -p /home/ghost_user/ghost/content
+  fi
+
+  sudo mount -t efs -o tls ${EFS_ID}:/ /home/ghost_user/ghost/content
+  sudo chown ghost_user:ghost_user /home/ghost_user/ghost/content
+  
 # # Check if the Ghost posts table exists
 # EXIST=$(mysql -h "$DB_URL" \
 #              -u "$DB_USER" -p"$DB_PASSWORD" \

@@ -11,7 +11,7 @@ resource "aws_launch_template" "ghost" {
   block_device_mappings {
     device_name = "/dev/xvda" # or whatever your AMI’s root device is
     ebs {
-      volume_size           = 20    # size in GB
+      volume_size           = 30    # size in GB
       volume_type           = "gp3" # gp3 (or gp2) is fine
       delete_on_termination = true  # auto‐cleanup
     }

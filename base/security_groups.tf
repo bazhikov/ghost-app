@@ -97,6 +97,16 @@ resource "aws_security_group_rule" "fargate_from_efs" {
   description              = "Allow NFS from EFS"
 }
 
+resource "aws_security_group_rule" "mysql_ingress_fargate_pool" {
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.mysql.id
+  source_security_group_id = aws_security_group.fargate_pool.id
+  description              = "Allow MySQL access from Fargate tasks"
+}
+
 # Security group used by VPC interface endpoints
 resource "aws_security_group" "vpc_endpoint" {
   name        = "vpc-endpoint"
@@ -181,7 +191,7 @@ resource "aws_security_group" "efs" {
     from_port       = 2049
     to_port         = 2049
     protocol        = "tcp"
-    security_groups = [aws_security_group.ec2_pool.id]
+    security_groups = [aws_security_group.ec2_pool.id, aws_security_group.fargate_pool.id]
   }
   egress {
     description = "Allow all outbound"
