@@ -40,13 +40,15 @@ resource "aws_security_group" "ec2_pool" {
     protocol        = "tcp"
     security_groups = [aws_security_group.bastion_sg.id]
   }
-  ingress {
-    description = "EFS from VPC"
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
-  }
+  # ingress {
+  #   description = "EFS from VPC"
+  #   from_port   = 2049
+  #   to_port     = 2049
+  #   protocol    = "tcp"
+  #   cidr_blocks = [var.vpc_cidr]
+  #   source_security_group_id = aws_security_group.ec2_pool.id
+  #   security_groups =  [aws_security_group.efs.id]
+  # }
   egress {
     description = "Allow all outbound"
     from_port   = 0
@@ -57,6 +59,15 @@ resource "aws_security_group" "ec2_pool" {
   tags = {
     Name = "ec2-pool-sg"
   }
+}
+
+resource "aws_security_group_rule" "ec2_pool_ingress_nfs" {
+  type              = "ingress"
+  from_port         = 2049
+  to_port           = 2049
+  protocol          = "tcp"
+  cidr_blocks       = [var.vpc_cidr]
+  security_group_id = aws_security_group.ec2_pool.id
 }
 
 # Security group for ECS Fargate tasks
@@ -86,14 +97,24 @@ resource "aws_security_group_rule" "fargate_pool_ingress_from_alb" {
   source_security_group_id = aws_security_group.alb.id
 }
 
+# Ingress Rule: Allow access to ALB from Fargate
+resource "aws_security_group_rule" "fargate_to_alb" {
+  type                     = "egress"
+  from_port                = 2368
+  to_port                  = 2368
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.alb.id          # Target Fargate SG
+  source_security_group_id = aws_security_group.fargate_pool.id # Source ALB SG
+}
+
 # Allow NFS traffic from the EFS security group to Fargate tasks
 resource "aws_security_group_rule" "fargate_from_efs" {
   type                     = "ingress"
   from_port                = 2049
   to_port                  = 2049
   protocol                 = "tcp"
-  security_group_id        = aws_security_group.fargate_pool.id
-  source_security_group_id = aws_security_group.efs.id
+  security_group_id        = aws_security_group.efs.id
+  source_security_group_id = aws_security_group.fargate_pool.id
   description              = "Allow NFS from EFS"
 }
 
@@ -127,11 +148,31 @@ resource "aws_security_group" "vpc_endpoint" {
 
 resource "aws_security_group_rule" "vpc_endpoint_ingress_from_fargate" {
   type                     = "ingress"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.vpc_endpoint.id
+  source_security_group_id = aws_security_group.fargate_pool.id
+}
+
+resource "aws_security_group_rule" "efs_ingress_from_bastion" {
+  type                     = "ingress"
+  from_port                = 2049
+  to_port                  = 2049
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.efs.id
+  source_security_group_id = aws_security_group.bastion_sg.id
+  description              = "Allow NFS from bastion for debugging"
+}
+
+resource "aws_security_group_rule" "vpc_endpoint_ingress_443_from_fargate" {
+  type                     = "ingress"
   from_port                = 443
   to_port                  = 443
   protocol                 = "tcp"
   security_group_id        = aws_security_group.vpc_endpoint.id
   source_security_group_id = aws_security_group.fargate_pool.id
+  description              = "Allow HTTPS (443) from Fargate to VPC Endpoints (ECR, etc.)"
 }
 
 resource "aws_security_group" "alb" {
@@ -186,20 +227,20 @@ resource "aws_security_group" "efs" {
   description = "defines access to efs mount points"
   vpc_id      = aws_vpc.cloudx.id
 
-  ingress {
-    description     = "EFS from VPC"
-    from_port       = 2049
-    to_port         = 2049
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ec2_pool.id, aws_security_group.fargate_pool.id]
-  }
-  egress {
-    description = "Allow all outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [var.vpc_cidr]
-  }
+  # ingress {
+  #   description     = "EFS from VPC"
+  #   from_port       = 2049
+  #   to_port         = 2049
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.fargate_pool.id]
+  # }
+  # egress {
+  #   description = "Allow all outbound"
+  #   from_port   = 0
+  #   to_port     = 0
+  #   protocol    = "-1"
+  #   cidr_blocks = [var.vpc_cidr]
+  # }
   tags = {
     Name = "efs-sg"
   }

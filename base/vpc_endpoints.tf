@@ -1,9 +1,18 @@
 # Interface VPC endpoints accessed by Fargate tasks
+locals {
+  # Ensure only one subnet per AZ — mix public and private
+  vpc_endpoint_subnets = [
+    aws_subnet.subnet_cloudx[0].id, # eu-central-1a
+    aws_subnet.subnet_ecs[1].id,    # eu-central-1b
+    aws_subnet.subnet_ecs[2].id     # eu-central-1c
+  ]
+}
+
 resource "aws_vpc_endpoint" "ssm" {
   vpc_id              = aws_vpc.cloudx.id
   service_name        = "com.amazonaws.${var.aws_region}.ssm"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.subnet_ecs[*].id
+  subnet_ids          = local.vpc_endpoint_subnets
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   private_dns_enabled = true
 }

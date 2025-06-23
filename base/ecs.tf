@@ -10,7 +10,7 @@ locals {
   ghost_container_def = jsonencode([
     {
       name      = "ghost_container"
-      image     = "${aws_ecr_repository.ghost.repository_url}:5.121"
+      image     = "${aws_ecr_repository.ghost.repository_url}:5.126.1-clean"
       essential = true
       environment = [
         { name = "database__client", value = "mysql" },
@@ -24,7 +24,7 @@ locals {
         sourceVolume  = "ghost_volume"
       }]
       portMappings = [{
-        containerPort = 2368
+        containerPort = 2368,
         hostPort      = 2368
       }]
       # Add logConfiguration to the container definition in locals.ghost_container_def
@@ -47,7 +47,7 @@ resource "aws_ecs_task_definition" "ghost" {
   cpu                      = "256"
   memory                   = "1024"
   execution_role_arn       = aws_iam_role.ghost_ecs.arn
-  task_role_arn            = aws_iam_role.ghost_ecs.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
   container_definitions    = local.ghost_container_def
 
   volume {

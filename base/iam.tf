@@ -87,9 +87,8 @@ resource "aws_iam_role" "ghost_ecs" {
   })
 }
 
-resource "aws_iam_role_policy" "ghost_ecs_policy" {
+resource "aws_iam_policy" "ghost_ecs_policy" {
   name = "ghost_ecs_policy"
-  role = aws_iam_role.ghost_ecs.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -103,6 +102,10 @@ resource "aws_iam_role_policy" "ghost_ecs_policy" {
         "elasticfilesystem:DescribeFileSystems",
         "elasticfilesystem:ClientMount",
         "elasticfilesystem:ClientWrite",
+        "elasticfilesystem:ClientRootAccess",
+        "ssm:GetParameter*",
+        "secretsmanager:GetSecretValue",
+        "kms:Decrypt",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
         "logs:CreateLogGroup"
@@ -112,9 +115,62 @@ resource "aws_iam_role_policy" "ghost_ecs_policy" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy_attachment" {
+  role       = aws_iam_role.ghost_ecs.name
+  policy_arn = aws_iam_policy.ghost_ecs_policy.arn
+}
+
 resource "aws_iam_instance_profile" "ghost_ecs" {
   name = "ghost_ecs"
   role = aws_iam_role.ghost_ecs.name
+}
+
+# ECS task role
+resource "aws_iam_role" "ecs_task_role" {
+  name = "ecs_task_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = { Service = "ecs-tasks.amazonaws.com" },
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "ecs_task_role"
+  }
+}
+
+resource "aws_iam_policy" "ecs_task_role_policy" {
+  name        = "ecs_task_role_policy"
+  description = "Policy for ECS task role to pull images from ECR"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ssm:GetParameter*",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_role_policy_attachment" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.ecs_task_role_policy.arn
 }
 
 output "ecs_role_arn" {
