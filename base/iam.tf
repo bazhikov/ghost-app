@@ -31,15 +31,13 @@ resource "aws_iam_policy" "ghost_app_policy" {
           "ssm:GetParameter*",
           "secretsmanager:GetSecretValue",
           "kms:Decrypt",
-          "rds:DescribeDBInstances",
-          "rds:DescribeDBClusters",
-          "rds:DescribeDBClusterEndpoints",
-          "rds:DescribeDBClusterParameterGroups",
-          "rds:DescribeDBClusterSnapshotAttributes",
-          "rds:DescribeEvents",
-          "rds:DescribeDBClusterSnapshots",
-          "rds:DescribeDBClusterBacktracks",
-          "rds:DescribeDBClusterBacktracks",
+          "cloudwatch:GetMetricData",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "rds:Describe*",
           "rds:Connect"
         ]
         Resource = "*"
@@ -108,7 +106,10 @@ resource "aws_iam_policy" "ghost_ecs_policy" {
         "kms:Decrypt",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
-        "logs:CreateLogGroup"
+        "logs:CreateLogGroup",
+        "cloudwatch:GetMetricData",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:ListMetrics"
       ]
       Resource = "*"
     }]
@@ -160,7 +161,13 @@ resource "aws_iam_policy" "ecs_task_role_policy" {
           "ecr:BatchGetImage",
           "ssm:GetParameter*",
           "secretsmanager:GetSecretValue",
-          "kms:Decrypt"
+          "kms:Decrypt",
+          "cloudwatch:GetMetricData",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:ListMetrics",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
         ],
         Resource = "*"
       }
