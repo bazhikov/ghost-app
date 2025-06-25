@@ -1,20 +1,43 @@
 # Interface VPC endpoints accessed by Fargate tasks
 locals {
-  # Ensure only one subnet per AZ — mix public and private
-  vpc_endpoint_subnets = [
-    aws_subnet.subnet_cloudx[0].id, # eu-central-1a
-    aws_subnet.subnet_ecs[1].id,    # eu-central-1b
-    aws_subnet.subnet_ecs[2].id     # eu-central-1c
+    # Ensure unique AZs for each endpoint (must be in different AZs)
+    ssm_endpoint_subnets_ecs = [
+      aws_subnet.subnet_ecs[0].id,   # e.g., eu-central-1a
+      aws_subnet.subnet_ecs[1].id    # e.g., eu-central-1b
   ]
+
+    ssm_endpoint_subnets_ec2 = [
+      aws_subnet.subnet_cloudx[2].id # e.g., eu-central-1c
+  ]
+
 }
 
-resource "aws_vpc_endpoint" "ssm" {
+# ECS: Private subnets (ECS tasks)
+resource "aws_vpc_endpoint" "ssm_ecs" {
   vpc_id              = aws_vpc.cloudx.id
   service_name        = "com.amazonaws.${var.aws_region}.ssm"
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = local.vpc_endpoint_subnets
+  subnet_ids          = local.ssm_endpoint_subnets_ecs
   security_group_ids  = [aws_security_group.vpc_endpoint.id]
   private_dns_enabled = true
+
+  tags = {
+    Name = "ssm-endpoint-for-ecs"
+  }
+}
+
+# EC2: Public subnet (EC2 pool)
+resource "aws_vpc_endpoint" "ssm_ec2" {
+  vpc_id              = aws_vpc.cloudx.id
+  service_name        = "com.amazonaws.${var.aws_region}.ssm"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = local.ssm_endpoint_subnets_ec2
+  security_group_ids  = [aws_security_group.vpc_endpoint.id]
+  private_dns_enabled = false # IMPORTANT: don't override public DNS for EC2
+
+  tags = {
+    Name = "ssm-endpoint-for-ec2"
+  }
 }
 
 resource "aws_vpc_endpoint" "ecr_api" {

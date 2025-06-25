@@ -19,13 +19,13 @@ resource "aws_lb_target_group" "ghost_ec2_tg" {
   vpc_id   = aws_vpc.cloudx.id
 
   health_check {
-    path                = "/ghost"
+    path                = "/"
     protocol            = "HTTP"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher             = "200,301,302"
+    matcher             = "200-399"
   }
 
   tags = {

@@ -165,6 +165,15 @@ resource "aws_security_group_rule" "efs_ingress_from_bastion" {
   description              = "Allow NFS from bastion for debugging"
 }
 
+resource "aws_security_group_rule" "ssm_ingress_from_ec2" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.vpc_endpoint.id
+  source_security_group_id = aws_security_group.ec2_pool.id
+}
+
 resource "aws_security_group_rule" "vpc_endpoint_ingress_443_from_fargate" {
   type                     = "ingress"
   from_port                = 443
@@ -200,6 +209,16 @@ resource "aws_security_group_rule" "alb_to_ec2" {
   security_group_id        = aws_security_group.ec2_pool.id
   source_security_group_id = aws_security_group.alb.id
   description              = "Allow ALB to EC2 instances on port 2368"
+}
+
+resource "aws_security_group_rule" "alb_egress_to_ec2_2368" {
+  type                     = "egress"
+  from_port                = 2368
+  to_port                  = 2368
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.alb.id
+  source_security_group_id = aws_security_group.ec2_pool.id
+  description              = "Allow ALB to reach EC2 pool on port 2368"
 }
 
 resource "aws_security_group_rule" "ec2_to_alb" {

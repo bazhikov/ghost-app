@@ -17,15 +17,18 @@ resource "aws_launch_template" "ghost" {
     }
   }
 
-  #   network_interfaces {
-  #     associate_public_ip_address = true
-  #   }
+  network_interfaces {
+    device_index                = 0
+    associate_public_ip_address = true
+    subnet_id                   = aws_subnet.subnet_cloudx[0].id
+    security_groups             = [aws_security_group.ec2_pool.id]
+  }
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ghost_app_profile.name
   }
 
-  vpc_security_group_ids = [aws_security_group.ec2_pool.id]
+  # vpc_security_group_ids = [aws_security_group.ec2_pool.id]
 
   user_data = base64encode(templatefile("${path.module}/user_data.sh", {
     LB_DNS_NAME = aws_lb.cloudx_alb.dns_name,

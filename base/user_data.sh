@@ -38,36 +38,15 @@ if ! id "ghost_user" &>/dev/null; then
       echo "Folder already exists. Skipping ghost folder creation."
   fi
 
- # Ensure Ghost content directory exists and mount EFS
-  # if [ ! -d "/home/ghost_user/ghost/content" ]; then
-  #     sudo mkdir -p /home/ghost_user/ghost/content
-  # fi
-
-  # sudo mount -t efs -o tls ${EFS_ID}:/ /home/ghost_user/ghost/content
-  # sudo chown ghost_user:ghost_user /home/ghost_user/ghost/content
-  
-# # Check if the Ghost posts table exists
-# EXIST=$(mysql -h "$DB_URL" \
-#              -u "$DB_USER" -p"$DB_PASSWORD" \
-#              -D "$DB_NAME" \
-#              -sse "SELECT COUNT(*) FROM information_schema.tables
-#                    WHERE table_schema='$DB_NAME' AND table_name='posts';")
-
-# if [ "$EXIST" -eq 0 ]; then
-#   echo "Database is empty – running Ghost install with migrations"
-#   sudo -u ghost_user ghost install --version 5 local \
-#     --no-setup-nginx --no-setup-ssl --no-prompt
-# else
-#   echo "Database already initialized – skipping install/migration"
-# fi
+ 
 
 echo "Installing ghost..."
 cd /home/ghost_user/
 # sudo -u ghost_user ghost install --version 5 local --no-setup-nginx --no-setup-ssl --no-prompt || true
 
 ######################
-# sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --version 5 local"
-sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --db mysql --dbhost $DB_URL --dbuser $DB_USER --dbpass $DB_PASSWORD --dbname $DB_NAME --no-prompt --no-setup-nginx --no-setup-ssl"
+sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --version 5 local"
+# sudo su - ghost_user -c "cd /home/ghost_user/ghost && ghost install --db mysql --dbhost $DB_URL --dbuser $DB_USER --dbpass $DB_PASSWORD --dbname $DB_NAME --no-prompt --no-setup-nginx --no-setup-ssl"
 
 # sudo mkdir -p /home/ghost_user/ghost/content/data
 # sudo chown -R ghost_user:ghost_user /home/ghost_user/ghost/content
@@ -101,10 +80,7 @@ cat << EOF > config.development.json
     "transport": "Direct"
   },
   "logging": {
-    "transports": [
-      "file",
-      "stdout"
-    ]
+    "transports": ["file", "stdout"]
   },
   "process": "local",
   "paths": {

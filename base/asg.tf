@@ -4,7 +4,10 @@ resource "aws_autoscaling_group" "ghost_ec2_pool" {
     id      = aws_launch_template.ghost.id
     version = "$Latest"
   }
-  vpc_zone_identifier       = aws_subnet.subnet_cloudx[*].id
+  vpc_zone_identifier       = [
+    # aws_subnet.subnet_cloudx[1].id, # eu-central-1b
+    aws_subnet.subnet_cloudx[2].id  # eu-central-1c
+  ]
   min_size                  = 1
   max_size                  = 3
   desired_capacity          = 1
